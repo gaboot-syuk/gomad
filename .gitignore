@@ -1,0 +1,14 @@
+api/
+mobile/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs & temporer
+*.log
+*.tmp
+.smoke-test/
