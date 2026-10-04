@@ -39,8 +39,8 @@
 
 **Tujuan:** menyiapkan tempat kerja yang bisa dijalankan dan dihancurkan kapan saja, lalu membuktikan alur verifikasi live.
 
-> ✅ **Semua blocker sudah selesai** (2026-10-04) — lihat `docs/00` bagian 5.
-> Fase ini murni pekerjaan teknis, tidak menunggu keputusan apa pun.
+> Keputusan bisnis sudah selesai. Hosting staging Render free tier sengaja
+> ditunda sampai seluruh alur lokal berjalan lancar.
 
 **Langkah — kerjakan berurutan**
 
@@ -49,9 +49,9 @@
 | 1 | **Bersihkan sisa lama** — container `gomad-app-1` & `gomad-database-1`, dan folder `.smoke-test` | Namanya akan bentrok dengan project baru |
 | 2 | **Repo `api/`** — Laravel + `git init` | Repo pertama |
 | 3 | **Repo `mobile/`** — `git init`, isi kosong dulu | Repo kedua |
-| 4 | **Stack Docker** di `api/docker/compose.yaml`: nginx · app (php-fpm) · queue · scheduler · db · redis · mailpit · vite | Port: **8200** · **3307** · **6380** · **8125** · **5273** |
+| 4 | **Stack Docker** di `api/docker/compose.yaml`: nginx · app (php-fpm) · queue · scheduler · Aiven MySQL via TLS · redis · mailpit · vite | Port: **8200** · **6380** · **8125** · **5273** |
 | 5 | **Jalankan & buktikan** — `compose up`, halaman dibuka di **browser preview editor** | Menutup syarat verifikasi live pertama |
-| 6 | **Perintah harian** — `compose up/down` · `artisan migrate:fresh --seed` · `artisan test` · `app:reset-demo` | `app:reset-demo` wajib ada |
+| 6 | **Perintah harian** — `compose up/down` · `artisan migrate --seed` · `artisan test` · `app:reset-demo` | tes SQLite terisolasi; reset demo ditolak untuk database remote |
 | 7 | **CI dasar** — lint · tes · uji arsitektur (kerangka) · migrasi dari nol | Gagal = blokir |
 | 8 | **Backup terjadwal** + **uji pemulihan** | Backup yang belum dipulihkan belum bisa disebut backup |
 | 9 | **Kontrak API v0** — kerangka · cara generate · cara memberi sinyal ke repo `mobile/` | Karena dua repo terpisah |
@@ -59,15 +59,15 @@
 **Kriteria lulus**
 - [x] Container GoMad lama dibersihkan sebelum stack baru dinyalakan
 - [x] `compose up` menyalakan seluruh stack, dan halaman terbuka di **browser preview editor**
-- [x] `migrate:fresh --seed` dan `app:reset-demo` berjalan
-- [ ] CI hijau, menjalankan 8 langkah termasuk uji arsitektur
-- [x] Backup terjadwal berjalan dan pemulihan lokalnya sudah diuji; penyimpanan off-host masih menunggu konfigurasi
-- [x] Kontrak API punya tempat resmi, cara generate, dan mekanisme notifikasi ke repo mobile
+- [x] Migrasi bersih + seed berjalan setelah izin eksplisit untuk menghapus schema Aiven lama; `app:reset-demo` menolak database remote sebagai pengaman
+- [x] CI remote hijau pada commit integrasi; tes lokal, formatting, build aset, migrasi bersih + seed juga lulus
+- [x] Backup terjadwal ke penyimpanan lokal dan R2; pemulihan lokal serta pemulihan nyata dari objek R2 sudah diuji
+- [ ] Kontrak API punya tempat resmi dan cara generate; penerima `repository_dispatch` mobile lulus uji remote. Pengiriman otomatis dari API perlu secret GitHub Actions sebelum dapat dinyatakan selesai
 - [x] Prosedur rilis ditulis, walau rilis pertama belum terjadi
 
 **Kesiapan mobile:** struktur responsif disiapkan sejak awal (satu layout, banyak ukuran)
 
-**Akses:** aplikasi lokal di `http://localhost:8200` lulus verifikasi live; staging ber-URL menunggu konfigurasi hosting dan domain.
+**Akses:** aplikasi lokal di `http://localhost:8200` lulus verifikasi live; staging Render baru disiapkan setelah seluruh alur local berjalan lancar.
 
 ---
 
@@ -301,7 +301,7 @@
 |---|---|---|
 | Konsep | ✅ Selesai | `docs/08` · `09` · `11` |
 | Blueprint | ✅ **Selesai — 9 dari 9** | `blueprint/README.md` |
-| 0 — Fondasi | 🔄 Dikerjakan | Stack lokal, tes, backup/restore lokal, kontrak v0, dan browser live lolos; CI remote, URL staging, dan backup off-host menunggu konfigurasi |
+| 0 — Fondasi | 🔄 Dikerjakan | Migrasi/seed Aiven via TLS, backup/restore lokal↔R2, CI API remote, dan dispatch mobile nyata lulus; secret notifikasi otomatis belum disetel |
 | 1 — Identity & Access | ⬜ Belum | |
 | 2 — Ledger & Settlement | ⬜ Belum | |
 | 3 — Payment & Notification | ⬜ Belum | |
@@ -312,6 +312,6 @@
 | 8 — Pengerasan & rilis | ⬜ Belum | |
 | 9 — Persiapan mobile | ⬜ Belum | |
 
-**Sedang dikerjakan:** Menutup Fase 0 — siapkan remote CI/notifikasi, URL staging, dan tujuan backup off-host beserta aksesnya.
+**Sedang dikerjakan:** Menutup Fase 0 — menyiapkan secret notifikasi kontrak di GitHub; setelah alur local/CI lengkap, staging Render tetap langkah terakhir sesuai keputusan pengguna.
 **Berikutnya:** Mulai Fase 1 setelah gerbang Fase 0 dan seluruh kriteria rilis-able terpenuhi.
-**Blocker terbuka:** Hosting/domain staging, penyimpanan backup off-host, dan remote/token GitHub untuk CI serta notifikasi kontrak mobile. Tidak ada keputusan bisnis yang memblokir.
+**Blocker terbuka:** Pengguna perlu mengatur secret repo API `MOBILE_REPOSITORY_TOKEN` memakai token yang dapat dispatch ke repo mobile, atau memperbarui PAT lokal dengan izin Actions write agar secret dapat disimpan terenkripsi. Tanpa secret, CI sengaja gagal bila kontrak API berubah; CI perubahan non-kontrak tetap berjalan. Staging Render ditunda sampai seluruh alur local/CI lancar. Kredensial Google Maps kosong, tetapi bukan blocker Fase 0.

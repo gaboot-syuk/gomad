@@ -76,7 +76,7 @@
 |---|---|
 | **Konsep** | ✅ Selesai — terkunci di `docs/08` · `09` · `11` |
 | **Blueprint** | ✅ **Selesai — 9 dari 9** · indeks di `blueprint/README.md` |
-| **Fase 0** | 🔄 Dikerjakan — stack lokal, verifikasi live, backup/restore lokal, dan kontrak v0 siap; staging dan integrasi remote menunggu konfigurasi |
+| **Fase 0** | 🔄 Dikerjakan — migrasi Aiven via TLS, backup/restore Aiven↔R2, CI API remote, dan penerima dispatch mobile lulus; secret GitHub untuk notifikasi otomatis masih perlu disetel, lalu staging Render tetap langkah terakhir |
 | **Fase 1–9** | ⬜ Belum mulai — mulai setelah seluruh kriteria Fase 0 lulus |
 
 ### Keputusan yang sudah selesai · 2026-10-04
@@ -94,6 +94,8 @@
 | 9 | **Settlement grosir** | **Real-time saat penjaga konfirmasi terima** — bukan siklus |
 | 10 | **Prefix kode** | Dipisah per vertical: `MW-` `MT-` `WD-` `ST-` `RF-` |
 | 11 | **Di luar Rilis 1** | Asuransi · monitoring kendaraan · corporate/event · premium agency · warung premium · iklan · skala B2B→B2B2C · analitik |
+| 12 | **Urutan staging** | Hosting staging Render free tier **ditunda sampai seluruh alur local berjalan lancar** |
+| 13 | **Database local** | Aplikasi local memakai Aiven MySQL via TLS terverifikasi; schema lama yang sudah tidak dipakai dibersihkan dengan izin eksplisit dan sekarang dipakai GoMad |
 
 ### Masih menunggu keputusan
 

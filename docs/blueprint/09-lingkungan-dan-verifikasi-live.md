@@ -40,12 +40,14 @@ docker/
 | `app` | PHP-FPM (Laravel) | internal |
 | `queue` | Worker antrean (Redis) | internal |
 | `scheduler` | Tugas terjadwal (settlement, pelepasan kursi) | internal |
-| `db` | MySQL / MariaDB | **3307** |
+| `db` | Database MariaDB sementara (hanya profil pemulihan backup) | tidak diekspos |
 | `redis` | Cache · antrean · sesi | **6380** |
 | `mailpit` | Menangkap email keluar saat pengujian | **8125** |
 | `vite` | Dev server aset (hot reload) | **5273** |
 
-> Semua port di atas **usulan** — akan diperiksa bebas/terpakai saat pembuatan.
+> Aplikasi lokal memakai **Aiven MySQL via TLS terverifikasi**; database
+> MariaDB hanya dinyalakan untuk uji restore backup. Backup harian disimpan
+> lokal dan disalin ke bucket privat Cloudflare R2. Redis dan Mailpit lokal.
 
 **Semua lewat `docker compose up`.** Tidak ada langkah pemasangan manual di luar Docker, supaya lingkungan bisa dihancurkan dan dibangun ulang kapan saja.
 
@@ -55,7 +57,7 @@ docker/
 
 ```
 1. docker compose up -d           → seluruh layanan berjalan
-2. docker compose exec app php artisan migrate
+2. bash bin/compose exec app php artisan migrate --seed
 3. Buka http://localhost:8200     → di browser preview editor
 4. Telusuri sesuai peran
 5. docker compose down            → berhenti bersih
@@ -66,10 +68,16 @@ docker/
 | Perintah | Fungsi |
 |---|---|
 | `compose up` | Nyalakan seluruh stack |
-| `compose exec app artisan migrate:fresh --seed` | Bangun ulang database + data contoh |
-| `compose exec app artisan test` | Jalankan tes |
-| `compose exec app artisan app:reset-demo` | **Kembalikan ke keadaan demo** — penting untuk verifikasi berulang |
-| `compose logs -f` | Lihat log |
+| `bash bin/compose exec app php artisan migrate --seed` | Migrasi aditif ke Aiven via TLS + data contoh |
+| `bash bin/test` | Jalankan tes terisolasi pada SQLite dalam memori |
+| `bash bin/compose exec app php artisan app:reset-demo` | **Kembalikan keadaan demo**; ditolak jika target MySQL remote |
+| `bash bin/verify-backup-restore [--r2-latest]` | Pulihkan dump lokal atau R2 ke MariaDB disposable |
+| `bash bin/compose logs -f` | Lihat log layanan |
+
+`migrate:fresh --seed` hanya untuk CI atau database disposable lokal; jangan
+jalankan pada Aiven. Kredensial tidak disalin ke `.env`. Pemulihan backup selalu
+memakai database MariaDB terpisah dan membuang schema sementara setelah
+verifikasi.
 
 ---
 
