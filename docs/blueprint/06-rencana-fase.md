@@ -62,7 +62,8 @@
 - [x] Migrasi bersih + seed berjalan setelah izin eksplisit untuk menghapus schema Aiven lama; `app:reset-demo` menolak database remote sebagai pengaman
 - [x] CI remote hijau pada commit integrasi; tes lokal, formatting, build aset, migrasi bersih + seed juga lulus
 - [x] Backup terjadwal ke penyimpanan lokal dan R2; pemulihan lokal serta pemulihan nyata dari objek R2 sudah diuji
-- [ ] Kontrak API punya tempat resmi dan cara generate; penerima `repository_dispatch` mobile lulus uji remote. Pengiriman otomatis dari API perlu secret GitHub Actions sebelum dapat dinyatakan selesai
+- [x] Kontrak API punya tempat resmi dan cara generate; perubahan kontrak memicu CI API → `repository_dispatch` → sinkronisasi OpenAPI mobile, semuanya lulus remote
+- [ ] Staging Render free tier dijalankan sebagai langkah terakhir setelah seluruh alur lokal, backup, CI, dan sinkronisasi kontrak lulus
 - [x] Prosedur rilis ditulis, walau rilis pertama belum terjadi
 
 **Kesiapan mobile:** struktur responsif disiapkan sejak awal (satu layout, banyak ukuran)
@@ -301,7 +302,7 @@
 |---|---|---|
 | Konsep | ✅ Selesai | `docs/08` · `09` · `11` |
 | Blueprint | ✅ **Selesai — 9 dari 9** | `blueprint/README.md` |
-| 0 — Fondasi | 🔄 Dikerjakan | Migrasi/seed Aiven via TLS, backup/restore lokal↔R2, CI API remote, dan dispatch mobile nyata lulus; secret notifikasi otomatis belum disetel |
+| 0 — Fondasi | 🔄 Dikerjakan | Migrasi/seed Aiven via TLS, backup/restore lokal↔R2, CI API remote, dan notifikasi + sinkronisasi kontrak mobile nyata lulus; staging Render free tier adalah gerbang terakhir |
 | 1 — Identity & Access | ⬜ Belum | |
 | 2 — Ledger & Settlement | ⬜ Belum | |
 | 3 — Payment & Notification | ⬜ Belum | |
@@ -312,6 +313,6 @@
 | 8 — Pengerasan & rilis | ⬜ Belum | |
 | 9 — Persiapan mobile | ⬜ Belum | |
 
-**Sedang dikerjakan:** Menutup Fase 0 — menyiapkan secret notifikasi kontrak di GitHub; setelah alur local/CI lengkap, staging Render tetap langkah terakhir sesuai keputusan pengguna.
+**Sedang dikerjakan:** Menutup Fase 0 — seluruh gerbang lokal, backup, CI, dan sinkronisasi kontrak lulus; staging Render free tier adalah langkah terakhir sesuai keputusan pengguna.
 **Berikutnya:** Mulai Fase 1 setelah gerbang Fase 0 dan seluruh kriteria rilis-able terpenuhi.
-**Blocker terbuka:** Pengguna perlu mengatur secret repo API `MOBILE_REPOSITORY_TOKEN` memakai token yang dapat dispatch ke repo mobile, atau memperbarui PAT lokal dengan izin Actions write agar secret dapat disimpan terenkripsi. Tanpa secret, CI sengaja gagal bila kontrak API berubah; CI perubahan non-kontrak tetap berjalan. Staging Render ditunda sampai seluruh alur local/CI lancar. Kredensial Google Maps kosong, tetapi bukan blocker Fase 0.
+**Blocker terbuka:** Belum ada kredensial Render di `kredensial/`; akses/API token Render perlu disediakan atau dikonfigurasi aman untuk menyiapkan staging free tier. Jangan menaruh token di chat atau commit. Kredensial Google Maps kosong, tetapi bukan blocker Fase 0.

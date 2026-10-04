@@ -169,3 +169,7 @@ Analogi sederhananya: verifikasi live membuktikan **rumahnya bisa ditinggali**. 
 | Verifikasi mobile di Fase 9 | **Build + web preview dijalankan sejak alur pertama ada** |
 
 **Perubahan di Fase 0:** menambah — Docker stack berjalan · perintah `compose` lengkap · `app:reset-demo` tersedia · **verifikasi live pertama berhasil** (buka halaman kosong di browser preview).
+
+**Gerbang terakhir Fase 0:** setelah seluruh alur lokal, backup, CI, dan
+sinkronisasi kontrak API→mobile lulus, siapkan staging Render free tier sesuai
+keputusan proyek. Jangan letakkan kredensial deployment di repo atau chat.
