@@ -170,6 +170,9 @@ Analogi sederhananya: verifikasi live membuktikan **rumahnya bisa ditinggali**. 
 
 **Perubahan di Fase 0:** menambah — Docker stack berjalan · perintah `compose` lengkap · `app:reset-demo` tersedia · **verifikasi live pertama berhasil** (buka halaman kosong di browser preview).
 
-**Gerbang terakhir Fase 0:** setelah seluruh alur lokal, backup, CI, dan
-sinkronisasi kontrak API→mobile lulus, siapkan staging Render free tier sesuai
-keputusan proyek. Jangan letakkan kredensial deployment di repo atau chat.
+**Gerbang terakhir Fase 0 (lulus · 2026-10-04):** setelah seluruh alur lokal,
+backup, CI, dan sinkronisasi kontrak API→mobile lulus, staging Render free tier
+berhasil dijalankan di <https://gomad-api-staging.onrender.com>. Health check
+`/api/v1/health` mengembalikan HTTP 200; browser preview membuka halaman melalui
+HTTPS tanpa mixed content. Konfigurasinya memakai SQLite in-memory dan tidak
+terhubung ke Aiven. Jangan letakkan kredensial deployment di repo atau chat.

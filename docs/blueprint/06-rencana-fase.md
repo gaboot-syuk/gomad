@@ -39,8 +39,9 @@
 
 **Tujuan:** menyiapkan tempat kerja yang bisa dijalankan dan dihancurkan kapan saja, lalu membuktikan alur verifikasi live.
 
-> Keputusan bisnis sudah selesai. Hosting staging Render free tier sengaja
-> ditunda sampai seluruh alur lokal berjalan lancar.
+> Keputusan bisnis sudah selesai. Staging Render free tier disiapkan sebagai
+> langkah terakhir setelah seluruh alur lokal/CI lulus; staging kini live dan
+> terverifikasi.
 
 **Langkah — kerjakan berurutan**
 
@@ -63,12 +64,12 @@
 - [x] CI remote hijau pada commit integrasi; tes lokal, formatting, build aset, migrasi bersih + seed juga lulus
 - [x] Backup terjadwal ke penyimpanan lokal dan R2; pemulihan lokal serta pemulihan nyata dari objek R2 sudah diuji
 - [x] Kontrak API punya tempat resmi dan cara generate; perubahan kontrak memicu CI API → `repository_dispatch` → sinkronisasi OpenAPI mobile, semuanya lulus remote
-- [ ] Staging Render free tier dijalankan sebagai langkah terakhir setelah seluruh alur lokal, backup, CI, dan sinkronisasi kontrak lulus
+- [x] Staging Render free tier dijalankan sebagai langkah terakhir setelah alur lokal, backup, CI, dan sinkronisasi kontrak lulus; halaman browser dan health check HTTPS lulus di <https://gomad-api-staging.onrender.com>
 - [x] Prosedur rilis ditulis, walau rilis pertama belum terjadi
 
 **Kesiapan mobile:** struktur responsif disiapkan sejak awal (satu layout, banyak ukuran)
 
-**Akses:** aplikasi lokal di `http://localhost:8200` lulus verifikasi live; staging Render baru disiapkan setelah seluruh alur local berjalan lancar.
+**Akses:** aplikasi lokal di `http://localhost:8200` dan staging di <https://gomad-api-staging.onrender.com> lulus verifikasi live. Staging Fase 0 memakai SQLite in-memory, file cache/session, dan queue sync; tidak menyentuh database Aiven.
 
 ---
 
@@ -302,7 +303,7 @@
 |---|---|---|
 | Konsep | ✅ Selesai | `docs/08` · `09` · `11` |
 | Blueprint | ✅ **Selesai — 9 dari 9** | `blueprint/README.md` |
-| 0 — Fondasi | 🔄 Dikerjakan | Migrasi/seed Aiven via TLS, backup/restore lokal↔R2, CI API remote, dan notifikasi + sinkronisasi kontrak mobile nyata lulus; staging Render free tier adalah gerbang terakhir |
+| 0 — Fondasi | ✅ Selesai | Migrasi/seed Aiven via TLS, backup/restore lokal↔R2, CI API remote, notifikasi + sinkronisasi kontrak mobile, dan staging Render live sudah diverifikasi |
 | 1 — Identity & Access | ⬜ Belum | |
 | 2 — Ledger & Settlement | ⬜ Belum | |
 | 3 — Payment & Notification | ⬜ Belum | |
@@ -313,6 +314,6 @@
 | 8 — Pengerasan & rilis | ⬜ Belum | |
 | 9 — Persiapan mobile | ⬜ Belum | |
 
-**Sedang dikerjakan:** Menutup Fase 0 — seluruh gerbang lokal, backup, CI, dan sinkronisasi kontrak lulus; staging Render free tier adalah langkah terakhir sesuai keputusan pengguna.
-**Berikutnya:** Mulai Fase 1 setelah gerbang Fase 0 dan seluruh kriteria rilis-able terpenuhi.
-**Blocker terbuka:** Belum ada kredensial Render di `kredensial/`; akses/API token Render perlu disediakan atau dikonfigurasi aman untuk menyiapkan staging free tier. Jangan menaruh token di chat atau commit. Kredensial Google Maps kosong, tetapi bukan blocker Fase 0.
+**Sedang dikerjakan:** Tidak ada — Fase 0 selesai pada 2026-10-04.
+**Berikutnya:** Mulai Fase 1 — Core: Identity & Access.
+**Blocker terbuka:** Tidak ada blocker Fase 0. Staging menggunakan SQLite in-memory dan tidak punya state persisten; koneksi database staging terpisah harus dirancang sebelum fase mulai menyimpan data.
