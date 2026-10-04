@@ -1,0 +1,3 @@
+# gomad
+
+Repository untuk gomad
