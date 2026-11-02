@@ -3,6 +3,12 @@
 > Dasar untuk semua dokumen blueprint lain.
 > Konsisten dengan: `docs/09` (pola peran) · `docs/05` (Core) · `docs/00` (aturan kerja)
 
+> **⚠️ Catatan implementasi (2026-10-17).** Kode aktual menyimpang dari dokumen ini pada dua hal:
+> 1. Vertical berada di `app/Core/{MadTrans,Warung}`, **bukan** di `app/Modules/`
+> 2. Web memakai **Blade**, **bukan** Inertia + Vue
+>
+> Tes arsitektur yang ada sudah lulus dengan struktur tersebut. Selaraskan dokumen atau kode — ini keputusan terbuka.
+
 ---
 
 ## 1. Prinsip

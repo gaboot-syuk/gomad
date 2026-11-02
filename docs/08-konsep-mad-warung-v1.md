@@ -281,7 +281,7 @@ Warung **tidak perlu akun**. Uang masuk langsung dari payment gateway:
 
 ```
 Dr  PLATFORM.CASH                 (nominal penuh)
-    Cr  GROSIR.AVAILABLE          (harga barang — utang ke grosir)
+    Cr  BUSINESS.PAYABLE:{id}     (harga barang — utang ke grosir)
     Cr  REVENUE.PLATFORM_FEE
     Cr  REVENUE.SERVICE_FEE
     Cr  PPN_PAYABLE

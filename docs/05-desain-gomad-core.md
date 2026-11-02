@@ -22,7 +22,7 @@
 ```
 ledger_accounts
   ├── id
-  ├── code              (unik, mis. "AGENCY.AVAILABLE:42")
+  ├── code              (unik, mis. "BUSINESS.AVAILABLE:42")
   ├── owner_type        ('platform' | 'agency' | 'agent')
   │                     ← nanti bisa 'driver' | 'owner' TANPA migrasi
   ├── owner_id          (null untuk akun platform)
@@ -61,7 +61,7 @@ wallet_holds                                        ← pengganti kolom cod_hold
 | Akun | Kelas | Fungsi |
 |---|---|---|
 | `PLATFORM.CASH` | asset | Kliring Midtrans / rekening bank |
-| `PLATFORM.AGENCY_PAYABLE` | liability | Uang customer yang **jadi hak agency**, belum disetor |
+| `BUSINESS.PAYABLE:<id>` | liability | Uang customer yang **jadi hak agency/grosir tersebut**, belum disetor |
 | `PLATFORM.REVENUE.SERVICE_FEE` | revenue | Biaya layanan |
 | `PLATFORM.REVENUE.PLATFORM_FEE` | revenue | Biaya platform |
 | `PLATFORM.REVENUE.WITHDRAWAL_FEE` | revenue | Biaya admin pencairan |
@@ -69,9 +69,8 @@ wallet_holds                                        ← pengganti kolom cod_hold
 | `PLATFORM.RECEIVABLE.COD_FEE` | receivable | Piutang fee dari transaksi COD |
 | `PLATFORM.EXPENSE.AGENT_COMMISSION` | expense | Komisi warung (2%) |
 | `PLATFORM.EXPENSE.PROMO` | expense | Diskon yang ditanggung platform |
-| `AGENCY.AVAILABLE:<id>` | liability | Saldo bebas agency |
-| `AGENCY.COLLATERAL:<id>` | liability | **Saldo mengendap** (deposit) |
-| `GROSIR.AVAILABLE:<id>` | liability | Saldo grosir (Mad Warung) — utang GoMad kepada grosir |
+| `BUSINESS.AVAILABLE:<id>` | liability | Saldo bebas agency atau grosir |
+| `BUSINESS.COLLATERAL:<id>` | liability | **Saldo mengendap** agency (deposit) |
 | ~~`AGENT.AVAILABLE`~~ | — | Dibatalkan di MVP — tidak ada bayar tunai di warung |
 
 > **Catatan penting:** **warung tidak punya akun.** Warung membayar lewat **payment gateway per transaksi**, bukan menyimpan saldo.
@@ -83,27 +82,28 @@ wallet_holds                                        ← pengganti kolom cod_hold
 
 ## 4. Kategori Transaksi (D6)
 
-18 kategori. Kolom `category` inilah yang membuat ledger bisa ditelusuri dan direkonsiliasi.
+Kategori transaksi versi pertama mengikuti katalog 19 kategori di
+`docs/blueprint/02-model-data-ledger.md`; kolom `category` membuat ledger bisa
+ditelusuri dan direkonsiliasi.
 
 ### Pendapatan
 
 | Kategori | Pemicu | Entri |
 |---|---|---|
-| `BOOKING_PAID_ONLINE` | Customer bayar via Midtrans | Dr `CASH` · Cr `AGENCY_PAYABLE`, Cr `REVENUE.SERVICE_FEE`, Cr `REVENUE.PLATFORM_FEE`, Cr `PPN_PAYABLE` |
+| `BOOKING_PAID_ONLINE` | Customer bayar via Midtrans | Dr `PLATFORM.CASH` · Cr `BUSINESS.PAYABLE:<id>`, Cr `PLATFORM.REVENUE.*`, Cr `PLATFORM.TAX_PAYABLE_PPN` |
 | `BOOKING_COD_CONFIRMED` | Supir konfirmasi penumpang naik, bayar tunai | Dr `RECEIVABLE.COD_FEE` · Cr `REVENUE.*`, Cr `PPN_PAYABLE` |
 | `RENTAL_PAID` | Rental dibayar | Sama seperti `BOOKING_PAID_ONLINE`, referensi rental |
-| `WITHDRAWAL_FEE` | Biaya admin pencairan | Dr `AGENCY.AVAILABLE` · Cr `REVENUE.WITHDRAWAL_FEE` |
-| `AGENT_COMMISSION` | Warung bantu pembayaran tunai | Dr `EXPENSE.AGENT_COMMISSION` · Cr `AGENT.AVAILABLE` |
+| `WITHDRAWAL_FEE` | Biaya admin pencairan | Dr `BUSINESS.AVAILABLE:<id>` · Cr `PLATFORM.REVENUE.WITHDRAWAL_FEE` |
 
 ### Jaminan (deposit)
 
 | Kategori | Pemicu | Entri |
 |---|---|---|
-| `COLLATERAL_TOPUP` | Agency isi deposit | Dr `CASH` · Cr `AGENCY.COLLATERAL` |
-| `COLLATERAL_TRANSFER_IN` | Pindah dari saldo bebas ke deposit | Dr `AGENCY.AVAILABLE` · Cr `AGENCY.COLLATERAL` |
-| `COLLATERAL_TRANSFER_OUT` | **Tarik deposit kembali** (memperbaiki bug legacy) | Dr `AGENCY.COLLATERAL` · Cr `AGENCY.AVAILABLE` |
-| `COD_FEE_COLLECTED` | Fee COD ditarik dari deposit | Dr `AGENCY.COLLATERAL` · Cr `RECEIVABLE.COD_FEE` |
-| `COD_FEE_ARREARS` | Deposit tak cukup → tunggakan jadi **entitas ledger**, bukan JSON | Dr `AGENCY.AVAILABLE` (negatif ditolak; dicatat sebagai piutang) · Cr `RECEIVABLE.COD_FEE` |
+| `COLLATERAL_TOPUP` | Agency isi deposit | Dr `PLATFORM.CASH` · Cr `BUSINESS.COLLATERAL:<id>` |
+| `COLLATERAL_TRANSFER_IN` | Pindah dari saldo bebas ke deposit | Dr `BUSINESS.AVAILABLE:<id>` · Cr `BUSINESS.COLLATERAL:<id>` |
+| `COLLATERAL_TRANSFER_OUT` | **Tarik deposit kembali** (memperbaiki bug legacy) | Dr `BUSINESS.COLLATERAL:<id>` · Cr `BUSINESS.AVAILABLE:<id>` |
+| `COD_FEE_COLLECTED` | Fee COD ditarik dari deposit | Dr `BUSINESS.COLLATERAL:<id>` · Cr `PLATFORM.RECEIVABLE.COD_FEE` |
+| `COD_FEE_ARREARS` | Deposit tak cukup → tunggakan jadi **entitas ledger**, bukan JSON | Dr `BUSINESS.AVAILABLE:<id>` (negatif ditolak; dicatat sebagai piutang) · Cr `PLATFORM.RECEIVABLE.COD_FEE` |
 
 > `wallet_holds` **tidak** menghasilkan entri ledger — hold bukan perpindahan uang.
 > Yang bergerak uang hanya `COD_FEE_COLLECTED`.
@@ -112,18 +112,25 @@ wallet_holds                                        ← pengganti kolom cod_hold
 
 | Kategori | Pemicu | Entri |
 |---|---|---|
-| `SETTLEMENT_TO_AGENCY` | Siklus settlement (default Senin) | Dr `AGENCY_PAYABLE` · Cr `AGENCY.AVAILABLE` |
-| `WITHDRAWAL_REQUEST` | Agency mengajukan pencairan | Dr `AGENCY.AVAILABLE` · Cr `CASH` (setelah dieksekusi) |
-| `WITHDRAWAL_REVERSAL` | Pencairan gagal | Kebalikan, **idempoten** |
+| `SETTLEMENT_TO_BUSINESS` | Settlement agency atau grosir | Dr `BUSINESS.PAYABLE:<id>` · Cr `BUSINESS.AVAILABLE:<id>` |
+| `WITHDRAWAL_REQUEST` | Agency mengajukan pencairan | Dr `BUSINESS.AVAILABLE:<id>` · Cr `PLATFORM.WITHDRAWAL_PAYABLE` (neto) · Cr `PLATFORM.REVENUE.WITHDRAWAL_FEE` |
+| `WITHDRAWAL_PAID` | Admin mencatat transfer manual berhasil | Dr `PLATFORM.WITHDRAWAL_PAYABLE` · Cr `PLATFORM.CASH` |
+| `WITHDRAWAL_REVERSAL` | Pencairan gagal | Membalik seluruh reservasi pengajuan, **idempoten** |
 
 ### Refund & koreksi
 
 | Kategori | Pemicu | Entri |
 |---|---|---|
-| `REFUND_APPROVED` | Refund disetujui | Dr `AGENCY_PAYABLE` · Cr `CASH` |
-| `REFUND_CASH_VIA_AGENT` | Refund tunai lewat warung — **legacy tidak punya pemroses** | Dr `AGENCY_PAYABLE` · Cr `AGENT.AVAILABLE` |
+| `REFUND_APPROVED` | Refund disetujui | Dr `BUSINESS.PAYABLE:<id>` · Cr `CASH` |
 | `PPN_REMITTANCE` | Setor PPN ke negara | Dr `PPN_PAYABLE` · Cr `CASH` |
+| `ORDER_PAID_TO_GROSIR` | Dana order dibayarkan kepada grosir | Dr `BUSINESS.PAYABLE:<id>` · Cr `CASH` |
+| `PROMO_PLATFORM_BORNE` | Diskon menjadi beban platform | Dr `EXPENSE.PROMO` · Cr akun sumber dana |
+| `PROMO_BUSINESS_BORNE` | Diskon mengurangi hak bisnis | Dr `BUSINESS.PAYABLE:<id>` · Cr akun promo |
 | `ADJUSTMENT` | Koreksi manual, **wajib alasan + jejak admin** | Bebas |
+
+`AGENT_COMMISSION` dan `REFUND_CASH_VIA_AGENT` adalah kategori rancangan
+vertikal/legacy di luar katalog ledger Rilis 1; jangan kirim sebagai `category`
+sebelum ditambahkan ke katalog dan diuji.
 
 ---
 
@@ -168,14 +175,14 @@ hold_aktif      = (kapasitas − kursi_yang_komisinya_disetor) × fee_per_kursi
 flowchart TD
   subgraph ONLINE["Booking Online (Midtrans)"]
     C1[Customer bayar] --> P1[CASH ↑]
-    P1 --> AP[AGENCY_PAYABLE ↑]
+    P1 --> AP[BUSINESS.PAYABLE ↑]
     P1 --> REV[REVENUE + PPN_PAYABLE ↑]
-    AP -->|settlement| AV[AGENCY.AVAILABLE ↑]
+    AP -->|settlement| AV[BUSINESS.AVAILABLE ↑]
   end
   subgraph CODCH["COD (tunai ke supir)"]
     C2[Customer bayar tunai] --> DR[Supir pegang uang]
     DR --> RC[RECEIVABLE.COD ↑ + REVENUE + PPN ↑]
-    RC -->|COD_FEE_COLLECTED| COL[AGENCY.COLLATERAL ↓]
+    RC -->|COD_FEE_COLLECTED| COL[BUSINESS.COLLATERAL ↓]
   end
   subgraph CASH["Cash via Warung (kode WM)"]
     C3[Customer bayar di warung] --> AG[AGENT.AVAILABLE ↑]
@@ -204,7 +211,7 @@ Rincian settlement yang harus tampil (memperbaiki A12):
   komisi warung 2% (jika cash)    Rp xxx   → EXPENSE.AGENT_COMMISSION
 ─────────────────────────────────────────
 = REVENUE platform bersih         Rp xxx
-  fare agency                     Rp xxx   → AGENCY_PAYABLE
+  fare agency                     Rp xxx   → BUSINESS.PAYABLE:<id>
 ```
 
 **Prinsip:** agency menerima **100% fare**. Platform tidak pernah memotong dari harga tiket.

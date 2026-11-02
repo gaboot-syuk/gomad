@@ -14,6 +14,13 @@
 | 07 | `07-strategi-uji.md` | ✅ **Selesai** | Uji wajib alur uang · rekonsiliasi · idempotency · race condition · uji beban ringan · uji pemulihan backup |
 | 08 | `08-deployment.md` | ✅ **Selesai** | Lingkungan lokal/staging/produksi · CI · backup & pemulihan · monitoring & alerting · rahasia & konfigurasi · prosedur rilis |
 | 09 | `09-lingkungan-dan-verifikasi-live.md` | ✅ **Selesai** | Stack Docker · port · perintah harian · **protokol verifikasi live web & mobile** · batas jujur verifikasi live |
+| 10 | `10-runbook-pilot-agency.md` | ✅ **Selesai** | Runbook uji pilot dengan 1 agency sungguhan · keadaan gagal yang wajib dicoba |
+| 11 | `11-prosedur-operasional.md` | ✅ **Selesai** | Pencairan · settlement · refund · sengketa · kegagalan webhook · rekonsiliasi harian · uji pemulihan backup · monitoring & alerting · rate limit |
+| 12 | `12-audit-checklist.md` | ✅ **Selesai** | Audit butir 🔴 `docs/04-checklist-jangan-diulang.md` terhadap kode + tes, beserta sisa temuan dan rencananya |
+| 13 | `13-staging-dan-domain.md` | ✅ **Selesai** | Runbook staging & rilis: prasyarat akun, env wajib, layanan web/worker/scheduler, langkah rilis, domain + TLS, checklist go-live, rollback |
+| 14 | `14-peta-komponen-web-ke-widget.md` | ✅ **Selesai** | Peta komponen Blade → widget Flutter, struktur folder `mobile/`, alur pilot Android, dan status kriteria Fase 9 |
+| 15 | `15-design-system.md` | ✅ **Selesai** | Token warna/radius/tipografi dari design system lama, komponen `gm.*`, navigasi sadar peran, lapisan transisi untuk halaman lama |
+| 16 | `16-peta-folder.md` | ✅ **Selesai** | Peta folder controller/view/rute per area (`MadWarung`, `MadTrans/{Travel,Rental,Customer,Driver}`, `Platform/Admin`, `Shared`), aturan penamaan, dan hal yang sengaja belum dipisah |
 
 ---
 

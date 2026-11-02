@@ -57,7 +57,9 @@ docker/
 
 ```
 1. docker compose up -d           → seluruh layanan berjalan
-2. bash bin/compose exec app php artisan migrate --seed
+2. bash bin/compose exec app php artisan migrate --force
+   bash bin/compose exec app php artisan db:seed --class="App\Core\Access\Infrastructure\AccessControlSeeder" --force
+   bash bin/compose exec app php artisan db:seed --class="App\Core\Ledger\Infrastructure\LedgerAccountSeeder" --force
 3. Buka http://localhost:8200     → di browser preview editor
 4. Telusuri sesuai peran
 5. docker compose down            → berhenti bersih
@@ -68,11 +70,53 @@ docker/
 | Perintah | Fungsi |
 |---|---|
 | `compose up` | Nyalakan seluruh stack |
-| `bash bin/compose exec app php artisan migrate --seed` | Migrasi aditif ke Aiven via TLS + data contoh |
+| `bash bin/compose exec app php artisan migrate --force` | Migrasi aditif ke Aiven via TLS |
+| `bash bin/compose exec app php artisan db:seed --class="App\Core\Access\Infrastructure\AccessControlSeeder" --force` | Sinkronkan katalog izin tanpa membuat akun demo |
+| `bash bin/compose exec app php artisan db:seed --class="App\Core\Ledger\Infrastructure\LedgerAccountSeeder" --force` | Buat bagan akun ledger bernilai nol tanpa akun demo |
 | `bash bin/test` | Jalankan tes terisolasi pada SQLite dalam memori |
 | `bash bin/compose exec app php artisan app:reset-demo` | **Kembalikan keadaan demo**; ditolak jika target MySQL remote |
+| `bash bin/compose exec app php artisan app:seed-demo --confirm` | **Isi data demo idempoten** di database aktif (termasuk Aiven): peran/izin, bagan akun, agency travel + armada 14 kursi, rute Jakarta→Bandung, 3 jadwal published, saldo jaminan COD Rp 5.000.000, akun `travel.owner@gomad.test`, `supir@gomad.test`, `penumpang@gomad.test`, dan admin platform `admin@gomad.test` (untuk verifikasi dokumen sewa; password semua `GomadDemo2026!`) |
 | `bash bin/verify-backup-restore [--r2-latest]` | Pulihkan dump lokal atau R2 ke MariaDB disposable |
 | `bash bin/compose logs -f` | Lihat log layanan |
+
+`app:seed-demo` tanpa `--confirm` hanya melaporkan target database dan tidak
+menulis apa pun. Perintah ini menambal celah `app:reset-demo` yang menolak
+database remote, sehingga uji browser live tetap bisa dilakukan pada Aiven.
+
+Variabel tarif wajib ada di `.env` (bukan hanya default compose, karena
+container yang sudah berjalan tidak ikut berubah):
+
+```
+MAD_TRANS_SERVICE_FEE=5000
+MAD_TRANS_PLATFORM_FEE_BASIS_POINTS=300
+MAD_TRANS_PPN_BASIS_POINTS=1100
+MAD_WARUNG_PPN_BASIS_POINTS=1100
+APP_TIMEZONE=Asia/Jakarta
+```
+
+`APP_TIMEZONE` wajib diisi `Asia/Jakarta`: jam keberangkatan di portal diisi dalam
+WIB, sedangkan bawaan Laravel adalah UTC. Tanpa variabel ini, jadwal pukul 20:55
+baru dianggap tiba waktunya tujuh jam kemudian, sehingga tombol "Mulai perjalanan"
+tidak pernah muncul saat dibutuhkan.
+
+Tanpa `MAD_TRANS_PPN_BASIS_POINTS`, pemesanan gagal dengan
+`TravelCheckoutNotConfigured`; tanpa saldo jaminan, booking COD gagal dengan
+`CodCollateralInsufficient`.
+
+**Kredensial Midtrans dan siklus hidup container.** `bin/compose` menyuntikkan
+`MIDTRANS_*` ke proses `docker compose` saat *container dibuat*. Container yang
+sudah berjalan sebelum berkas kredensial ada akan tetap tanpa nilai tersebut.
+Gejalanya: `Kredensial Midtrans belum dikonfigurasi.` Perbaikannya:
+
+```
+bash bin/compose up -d --force-recreate --no-dep app queue scheduler
+bash bin/compose restart nginx   # nginx menyimpan IP container app yang lama
+```
+
+`MIDTRANS_SNAP_URL` harus menunjuk endpoint API
+`https://app.sandbox.midtrans.com/snap/v1/transactions`. Nilai `.../snap/snap.js`
+adalah URL pustaka JavaScript dan akan dijawab `405 Not Allowed` oleh nginx;
+klien kini menormalkannya otomatis, tetapi sumber konfigurasi tetap harus benar.
 
 `migrate:fresh --seed` hanya untuk CI atau database disposable lokal; jangan
 jalankan pada Aiven. Kredensial tidak disalin ke `.env`. Pemulihan backup selalu

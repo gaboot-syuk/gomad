@@ -134,7 +134,7 @@ wallet_holds                                    ← pengganti kolom saldo-hold
 | Kode | Kelas | Fungsi |
 |---|---|---|
 | `PLATFORM.CASH` | asset | Kliring gateway / rekening bank |
-| `PLATFORM.PAYABLE_TO_BUSINESS` | liability | Hak mitra yang belum disetor |
+| `BUSINESS.PAYABLE:{id}` | liability | Hak agency/grosir yang belum disetor, terpisah per usaha |
 | `PLATFORM.REVENUE.SERVICE_FEE` | revenue | Biaya layanan |
 | `PLATFORM.REVENUE.PLATFORM_FEE` | revenue | Biaya platform |
 | `PLATFORM.REVENUE.WITHDRAWAL_FEE` | revenue | Biaya admin pencairan |
@@ -143,13 +143,17 @@ wallet_holds                                    ← pengganti kolom saldo-hold
 | `BUSINESS.AVAILABLE:{id}` | liability | Saldo bebas mitra (agency & grosir) |
 | `BUSINESS.COLLATERAL:{id}` | liability | Saldo mengendap (deposit) |
 
+Settlement mendebit `BUSINESS.PAYABLE:{id}` dan mengkredit
+`BUSINESS.AVAILABLE:{id}` untuk bisnis yang sama. Pemisahan payable per bisnis
+mencegah settlement suatu mitra memakai dana yang menjadi hak mitra lain.
+
 **Tanpa akun:** warung & penumpang. Keduanya membayar per transaksi lewat gateway, tidak menyimpan saldo.
 
 ### Kategori transaksi
 
-18 kategori — daftar lengkap di `docs/05` bagian 4. Yang **wajib** ada di Rilis 1:
+19 kategori — daftar lengkap di `docs/05` bagian 4. Yang **wajib** ada di Rilis 1:
 
-`BOOKING_PAID_ONLINE` · `BOOKING_COD_CONFIRMED` · `RENTAL_PAID` · `COLLATERAL_TOPUP` · `COLLATERAL_TRANSFER_IN` · `COLLATERAL_TRANSFER_OUT` · `COD_FEE_COLLECTED` · `COD_FEE_ARREARS` · `SETTLEMENT_TO_BUSINESS` · `WITHDRAWAL_REQUEST` · `WITHDRAWAL_FEE` · `WITHDRAWAL_REVERSAL` · `REFUND_APPROVED` · `PPN_REMITTANCE` · `ORDER_PAID_TO_GROSIR` · `PROMO_PLATFORM_BORNE` · `PROMO_BUSINESS_BORNE` · `ADJUSTMENT`
+`BOOKING_PAID_ONLINE` · `BOOKING_COD_CONFIRMED` · `RENTAL_PAID` · `COLLATERAL_TOPUP` · `COLLATERAL_TRANSFER_IN` · `COLLATERAL_TRANSFER_OUT` · `COD_FEE_COLLECTED` · `COD_FEE_ARREARS` · `SETTLEMENT_TO_BUSINESS` · `WITHDRAWAL_REQUEST` · `WITHDRAWAL_PAID` · `WITHDRAWAL_FEE` · `WITHDRAWAL_REVERSAL` · `REFUND_APPROVED` · `PPN_REMITTANCE` · `ORDER_PAID_TO_GROSIR` · `PROMO_PLATFORM_BORNE` · `PROMO_BUSINESS_BORNE` · `ADJUSTMENT`
 
 ### Aturan ledger yang tidak bisa ditawar
 

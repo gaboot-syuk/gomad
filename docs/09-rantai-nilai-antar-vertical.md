@@ -104,7 +104,7 @@ Kalau warung membayar ke GoMad, maka **GoMad yang wajib membayar grosir**. Dan i
 
 ### Konsekuensi
 
-**1. Grosir butuh akun ledger + siklus settlement** → `GROSIR.AVAILABLE`.
+**1. Grosir butuh akun ledger + siklus settlement** → `BUSINESS.AVAILABLE:{id}`.
 Karena strukturnya identik dengan agency, **mesin settlement Core dipakai apa adanya** — tidak dibangun ulang.
 
 **2. Kabar baik: "backup" tidak butuh modal tambahan.**
@@ -173,8 +173,8 @@ Dan itu kabar baik untuk MVP: **semakin banyak yang bisa dipakai ulang, semakin 
 
 | Akun ledger | Vertical | Status |
 |---|---|---|
-| `AGENCY.AVAILABLE` | Mad Trans | Sudah dirancang |
-| `GROSIR.AVAILABLE` | Mad Warung | ✅ **Dikonfirmasi** — grosir = agency secara struktur, pakai mesin settlement yang sama |
+| `BUSINESS.AVAILABLE:{id}` | Mad Trans | Sudah dirancang |
+| `BUSINESS.AVAILABLE:{id}` | Mad Warung | ✅ **Dikonfirmasi** — grosir = agency secara struktur, pakai mesin settlement yang sama |
 | ~~`WARUNG_OWNER.AVAILABLE`~~ | ~~Mad Warung~~ | ❌ **Dibatalkan** — warung tidak punya saldo, bayar via payment gateway |
 | `PLATFORM.*` | Semua | Sudah dirancang |
 

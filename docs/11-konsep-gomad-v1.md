@@ -87,7 +87,7 @@ Penjual menerima **harga penuh** (Model B) — platform tidak pernah memotong da
 | **Settlement** | Untuk agency & grosir, PPN akun terpisah |
 | **Notification** | WhatsApp + in-app |
 
-**Akun**: `PLATFORM.*` · `AGENCY.AVAILABLE` · `AGENCY.COLLATERAL` · `GROSIR.AVAILABLE`
+**Akun**: `PLATFORM.*` · `BUSINESS.PAYABLE:{id}` · `BUSINESS.AVAILABLE:{id}` · `BUSINESS.COLLATERAL:{id}` (agency)
 **Tanpa akun**: warung, penumpang.
 
 Detail: `docs/05-desain-gomad-core.md`

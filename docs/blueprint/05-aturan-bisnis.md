@@ -160,6 +160,52 @@ pendapatan platform  Rp   9.500
 | K6 | Kursi supir tidak bisa dipesan |
 | K7 | **Cutoff penjualan:** travel 60 menit · rute panjang / door-to-door banyak titik 120 menit — bisa diatur per rute |
 | K8 | Semua jalur (booking, transfer, input manual) memakai **logika kapasitas yang sama** — tidak boleh ada duplikasi |
+| K9 | **Denah kursi dibentuk dari formasi baris**, bukan diketik per kode. Owner memilih jumlah kursi tiap baris (mis. `2-3-3` untuk Hiace) dan sistem membentuk `A1,A2,B1,B2,B3,C1,C2,C3` (`App\Core\MadTrans\Domain\SeatLayout`) |
+| K10 | Batas formasi: maksimal **8 baris**, **4 kursi per baris**, **40 kursi** per kendaraan. Baris 0 dilewati tetapi huruf barisnya tetap (A, C, D — B kosong tidak dipakai ulang) |
+| K11 | **Kursi supir ditandai terpisah** lewat `vehicles.has_driver_seat`, bukan sebagai kursi di `seat_layout`. Ia tidak pernah masuk kapasitas jual dan tidak pernah muncul sebagai kursi yang bisa dipilih |
+| K12 | `seat_layout` tetap satu-satunya sumber kebenaran penjualan: formasi hanya **cara mengisinya**, bukan tabel kedua |
+
+---
+
+## 9a. Biaya jemput door to door
+
+Titik kumpul tetap titik berat perjalanan. Pelanggan **boleh** meminta dijemput di
+luar titik kumpul pada kota yang sama; sampai radius tertentu gratis, selebihnya
+dihitung per kilometer. Kebijakan ini milik usaha (`business_pickup_policies`),
+jadi tidak perlu migrasi saat agency mengubah tarif.
+
+| # | Aturan |
+|---|---|
+| J1 | Kebijakan per usaha: `free_radius_km` (default 0) dan `fee_per_km`. Satu baris per usaha |
+| J2 | Jarak dihitung **haversine** dari koordinat titik kumpul ke koordinat jemput, dibulatkan 2 desimal |
+| J3 | Kilometer yang ditagih = `ceil(jarak − free_radius_km)`. **Pembulatan ke atas**: 11,1 km dengan radius gratis 5 km → 7 km yang ditagih |
+| J4 | Biaya = `km_ditagih × fee_per_km`, dalam rupiah bulat. Radius 0 berarti ditagih sejak kilometer pertama |
+| J5 | Tanpa kebijakan, tanpa koordinat titik kumpul, atau tanpa titik jemput → **biaya 0**, bukan galat. Door to door bersifat opsional |
+| J6 | **Biaya jemput masuk ke pendapatan usaha** (ongkos angkut), **tidak** masuk basis platform fee maupun PPN. Rumus fee & pajak tidak berubah karena ada jemput |
+| J7 | Saat booking dibatalkan, biaya jemput mengikuti porsi pengembalian di §7 — bukan dikecualikan |
+| J8 | Titik jemput disimpan pada booking (`pickup_address`, `pickup_latitude`, `pickup_longitude`, `pickup_distance_km`, `pickup_fee`) supaya angka saat memesan bisa diaudit |
+| J9 | Server menghitung, klien hanya menampilkan. Halaman pilih kursi memanggil `pickup-quote` setiap titik berubah; tidak ada perhitungan biaya di browser |
+| J10 | Koordinat titik kumpul disimpan di `route_stops.latitude/longitude`. Owner mengisinya dengan menempel tautan Google Maps/OpenStreetMap atau koordinat `lat, lng` (`GeoPoint::fromInput`) |
+| J11 | Peta memakai **tautan OpenStreetMap**, bukan SDK berbayar — tidak ada biaya peta dan pelanggan memakai aplikasi peta yang sudah ia punya |
+
+---
+
+## 9b. Kasir warung (POS)
+
+Penjualan langsung ke pembeli yang datang ke warung. **Bukan** bagian dari
+`orders` (pesanan warung ke grosir) dan **bukan** transaksi platform.
+
+| # | Aturan |
+|---|---|
+| P1 | Harga jual diambil dari `retail_listings` di server. Harga yang dikirim klien **diabaikan** — kalau tidak, siapa pun bisa menjual seharga Rp 0 |
+| P2 | Barang masuk daftar jual saat warung **menerima** pesanan grosir, dengan harga beli terakhir sebagai titik awal. Harga yang sudah disesuaikan pemilik tidak pernah ditimpa |
+| P3 | **Tanpa biaya platform dan tanpa PPN.** `total_amount` = jumlah baris. Platform bukan penjual dan tidak memproses pembayarannya |
+| P4 | **Tidak ada posting ledger.** Kas `BUSINESS.AVAILABLE:<id>` berarti uang yang dipegang platform; tunai kasir tidak pernah sampai ke sana. Nota kasir tetap tersimpan dan bisa diaudit |
+| P5 | **Stok grosir tidak dikurangi.** `product_prices.stock_available` milik grosir, bukan rak warung. Persediaan warung belum dimodelkan |
+| P6 | Uang diterima kurang dari total → transaksi ditolak. Kembalian dihitung server, bukan hanya ditampilkan |
+| P7 | Baris nota menyimpan **salinan** nama, satuan, dan harga saat transaksi; perubahan harga besok tidak boleh mengubah nota kemarin |
+| P8 | Nota mencatat shift aktif penjaga bila ada, sehingga penjualan bisa dikelompokkan per shift |
+| P9 | Izin: `pos.sell` untuk penjaga, `pos.report` untuk pemilik. Penolakan dilakukan di action, bukan hanya dengan menyembunyikan menu |
 
 ---
 

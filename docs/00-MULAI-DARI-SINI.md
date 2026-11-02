@@ -58,7 +58,7 @@
 
 | Repo | Isi | Teknologi |
 |---|---|---|
-| `api/` | Backend + web (semua peran) | Laravel + Inertia + Vue |
+| `api/` | Backend + web (semua peran) | Laravel + **Blade** *(implementasi; blueprint menyebut Inertia + Vue)* |
 | `mobile/` | Aplikasi native (menyusul) | Flutter |
 
 | Lokasi | Isi |
