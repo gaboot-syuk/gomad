@@ -76,6 +76,8 @@ pendapatan platform  Rp   9.500
 | P6 | Approval berlaku **60 menit**; lewat itu kedaluwarsa dan harus diminta ulang |
 | P7 | Penolakan **wajib disertai alasan** |
 | P8 | **Plafon adalah pengaman finansial utama pemilik** — bukan fitur pelengkap. Kalau lemah, proposi "kendali" runtuh |
+| P9 | **Satu penjaga, satu warung.** Akun penjaga hanya boleh menjadi anggota aktif di satu warung; undangan kedua ditolak saat dibuat *dan* saat diterima (`IssueBusinessInvitation`, `AcceptBusinessInvitation`). Alasannya: penjaga memegang uang dan melihat laporan kas — kalau tersebar di beberapa warung, jejaknya kabur |
+| P10 | **Pemilik boleh punya beberapa warung.** Aturan P9 melekat pada peran `penjaga`, bukan pada tipe akun `warung_owner`; aplikasi wajib menampilkan warung mana yang sedang dibuka dan memberi pilihan bila lebih dari satu |
 
 ---
 

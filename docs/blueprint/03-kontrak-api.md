@@ -222,7 +222,7 @@ dapat dipakai.
 
 | Metode | Jalur | Catatan |
 |---|---|---|
-| POST | `/auth/login` | Bila MFA aktif: `data.mfa_required = true` + `data.mfa_token` (tanpa token akses) |
+| POST | `/auth/login` | `200` = token akses siap pakai. Bila MFA aktif: **`428`** `code = MFA_REQUIRED` + `data.mfa_token` (tanpa token akses) |
 | POST | `/auth/mfa/verify` | `mfa_token`, `code` (6 angka), `device_name?` → token akses |
 | GET | `/me/security` | status MFA + email tujuan kode |
 | POST | `/me/security/two-factor` | kirim kode aktivasi → `mfa_token`, `expires_at` |
@@ -243,6 +243,33 @@ dapat dipakai.
 Penjaga membuat pesanan; pemilik warung menyetujui dan melakukan checkout
 Midtrans Snap atas nama warung. Snap tidak menggunakan metode pembayaran
 tersimpan milik pemilik.
+
+### Mad Warung — Kasir (POS)
+
+| Metode | Jalur | Izin |
+|---|---|---|
+| GET | `/warung/businesses/{business}/pos` | `pos.sell` — barang yang dijual + angka hari ini |
+| POST 🔑 | `/warung/businesses/{business}/pos/sales` | `pos.sell` — `items[] = {product_id, quantity}`, `paid_amount?`, `note?` |
+| GET | `/warung/businesses/{business}/pos/sales` | `pos.report` — riwayat nota (25/halaman) |
+
+Usaha ada di jalur, bukan di badan permintaan: klien hasil generate hanya bisa
+mengisi parameter yang terbaca di kontrak. Baris penjualan dikirim sebagai
+daftar objek, bukan peta `id => jumlah`, karena peta tidak bisa dijelaskan di
+OpenAPI.
+
+### Mad Trans — Supir
+
+| Metode | Jalur | Izin |
+|---|---|---|
+| GET | `/mad-trans/driver/schedules` | `area:driver` — `data.active[]` (published + in_progress) dan `data.completed[]` (7 hari) |
+| GET | `/mad-trans/driver/schedules/{schedule}` | `area:driver` — jadwal + pesanan + penumpang, dengan `can_board` / `can_mark_no_show` |
+| POST | `/mad-trans/bookings/{booking}/passengers/{passenger}/board` | boarding COD |
+| POST | `/mad-trans/bookings/{booking}/passengers/{passenger}/no-show` | lepas jaminan COD |
+| POST | `/mad-trans/schedules/{schedule}/start` · `/finish` | memulai & menutup perjalanan |
+
+`can_board` / `can_mark_no_show` hanya untuk tampilan tombol; aturan sebenarnya
+tetap di `ConfirmCodPassengerBoarding` dan `VoidCodPassengerHold`, dan endpoint
+aksi menjawab `422` bila jaminan COD belum ada.
 
 ### Mad Warung — Penjaga
 

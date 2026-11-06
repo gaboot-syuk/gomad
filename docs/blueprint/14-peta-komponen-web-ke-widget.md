@@ -48,33 +48,84 @@ mobile/
 ├── api_client/          # hasil generate — JANGAN diedit
 ├── contracts/           # salinan kontrak OpenAPI (di-commit)
 ├── lib/
-│   ├── main.dart        # kerangka aplikasi + pemilihan halaman
+│   ├── main.dart        # kerangka aplikasi; tema mengikuti peran
 │   └── src/
-│       ├── api_config.dart   # base URL + Dio + klien
-│       ├── session.dart      # token, refresh otomatis, retry 401
-│       ├── token_store.dart  # penyimpanan token (memori → aman di produksi)
-│       ├── format.dart       # Rupiah, jam, tanggal
-│       └── ui/               # halaman: login, home, seat, payment
+│       ├── api_config.dart    # base URL + Dio + klien
+│       ├── session.dart       # token, refresh otomatis, retry 401
+│       ├── token_store.dart   # penyimpanan token (memori → aman di produksi)
+│       ├── workspace.dart     # account_type → ruang kerja native
+│       ├── format.dart        # Rupiah, jam, tanggal
+│       ├── theme/
+│       │   ├── uds.dart         # token UDS v1.0 (salinan dari web)
+│       │   └── gomad_theme.dart # dua bahasa desain → ThemeData
+│       └── ui/
+│           ├── kit/gm_kit.dart  # padanan `x-gm.*`
+│           ├── shell/app_shell.dart
+│           ├── login_page.dart  home_page.dart
+│           ├── seat_page.dart   payment_page.dart  account_page.dart
+│           ├── passenger/booking*.dart
+│           ├── driver/tasks_page.dart  driver/task_detail_page.dart
+│           └── warung/pos_page.dart  sales_report_page.dart
 └── tool/pilot_smoke.dart     # uji alur pilot langsung ke server
 ```
 
 ---
 
-## 4. Alur pilot (Android)
+## 4. Alur per peran
+
+### 4.1 Penumpang
 
 ```
-Login → Cari jadwal → Pilih kursi + data penumpang → Pesan → Bayar (Snap) → Batalkan (demo)
+Login → Cari jadwal → Pilih kursi + data penumpang → Pesan → Bayar (Snap)
+      → Pesanan saya → Rincian (batalkan bila masih bisa)
 ```
 
-| Langkah | Endpoint | Bukti |
-|---|---|---|
-| Login | `POST /v1/auth/login` | token 30 hari, nama perangkat dicatat |
-| Profil | `GET /v1/me` | nama pengguna tampil di AppBar |
-| Perpanjang sesi | `POST /v1/auth/refresh` | token berotasi, token lama dihapus |
-| Cari jadwal | `GET /v1/mad-trans/schedules` | menerima ISO 8601 dari klien |
-| Peta kursi | `GET /v1/mad-trans/schedules/{id}/seats` | kursi terisi tidak bisa dipilih |
-| Pesan | `POST /v1/mad-trans/bookings` | `Idempotency-Key` per percobaan |
-| Bayar | `POST /v1/mad-trans/bookings/{id}/pay` | Snap token + redirect URL |
+| Langkah | Endpoint |
+|---|---|
+| Login | `POST /v1/auth/login` (token 30 hari, nama perangkat dicatat) |
+| Profil | `GET /v1/me` |
+| Perpanjang sesi | `POST /v1/auth/refresh` (token berotasi) |
+| Cari jadwal | `GET /v1/mad-trans/schedules` |
+| Peta kursi | `GET /v1/mad-trans/schedules/{id}/seats` |
+| Pesan | `POST /v1/mad-trans/bookings` (`Idempotency-Key` per percobaan) |
+| Bayar | `POST /v1/mad-trans/bookings/{id}/pay` (Snap token + redirect URL) |
+| Pesanan saya | `GET /v1/mad-trans/bookings` · `GET /v1/mad-trans/bookings/{id}` |
+| Batalkan | `POST /v1/mad-trans/bookings/{id}/cancel` |
+
+### 4.2 Supir
+
+```
+Tugas saya → Rincian tugas → [Mulai perjalanan] → boarding per penumpang
+           → [Selesaikan perjalanan]
+```
+
+| Langkah | Endpoint |
+|---|---|
+| Daftar tugas | `GET /v1/mad-trans/driver/schedules` (aktif + selesai 7 hari) |
+| Rincian | `GET /v1/mad-trans/driver/schedules/{id}` |
+| Mulai / selesai | `POST /v1/mad-trans/schedules/{id}/start` · `/finish` |
+| Boarding / tidak naik | `POST /v1/mad-trans/bookings/{b}/passengers/{p}/board` · `/no-show` |
+
+Satu aksi utama per keadaan: `published` → "Mulai perjalanan", `in_progress` →
+boarding lalu "Selesaikan perjalanan", `completed` → tidak ada aksi.
+`can_board` dari server hanya menyalakan/mematikan tombol; penolakan server
+ditampilkan apa adanya.
+
+### 4.3 Penjaga warung (kasir)
+
+```
+Kasir → ketuk barang → ± jumlah → Bayar → uang diterima → kembalian → Simpan
+```
+
+| Langkah | Endpoint |
+|---|---|
+| Barang + angka hari ini | `GET /v1/warung/businesses/{id}/pos` |
+| Simpan penjualan | `POST /v1/warung/businesses/{id}/pos/sales` |
+| Riwayat (pemilik) | `GET /v1/warung/businesses/{id}/pos/sales` |
+
+Warung yang dipakai diambil dari `/v1/me/memberships` (tipe `warung`), bukan
+input bebas. Total dan kembalian yang tampil hanya untuk mata; angka yang
+tersimpan tetap dihitung server dari `retail_listings`.
 
 Uji cepat tanpa perangkat:
 
@@ -92,7 +143,7 @@ dart run tool/pilot_smoke.dart
 | `flutter_secure_storage` | Butuh plugin native; `TokenStore` sudah disiapkan sebagai titik ganti |
 | Push notification (FCM) | Menunggu kredensial Firebase |
 | Buka tautan Snap langsung | Butuh `url_launcher`; sementara tautan bisa disalin |
-| Kerangka proyek `android/` | Dibuat sekali dengan `flutter create .` di mesin ber-SDK lengkap |
+| Bundling font Inter | web pun jatuh ke font sistem; berkas font belum ada di repo |
 
 ---
 
@@ -100,7 +151,12 @@ dart run tool/pilot_smoke.dart
 
 | Kriteria | Status | Bukti |
 |---|---|---|
-| Klien Dart otomatis dari kontrak | ✅ | `bin/generate-dart-client` (22 kelompok API, ±155 model, `dart analyze` tanpa error) |
-| Auth token & refresh bekerja | ✅ | `test/session_test.dart` (4 tes) + `tool/pilot_smoke.dart` ke server lokal |
-| Satu alur pilot jalan di Android | 🟡 | Alur lengkap terbukti lewat klien dari host; instalasi di perangkat butuh `flutter create .` |
+| Klien Dart otomatis dari kontrak | ✅ | `bin/generate-dart-client` (27 kelompok API, ±390 model, `dart analyze` tanpa error) |
+| Auth token & refresh bekerja | ✅ | `test/session_test.dart` + `tool/pilot_smoke.dart` ke server lokal |
+| Alur penumpang | ✅ | Beranda, pesanan, rincian, pembatalan |
+| Alur supir | ✅ | Daftar tugas, rincian, boarding, mulai/selesai |
+| Alur penjaga warung | ✅ | Kasir + riwayat nota untuk pemilik |
+| Tema UDS (dua bahasa desain) | ✅ | `theme/uds.dart`, `theme/gomad_theme.dart`, `workspace.dart` |
 | Tidak ada logika bisnis diduplikasi | ✅ | Semua perhitungan di Core Laravel; aplikasi hanya memformat tampilan |
+| Kerangka `android/` terpasang | ✅ | `flutter create . --platforms=android --org id.gomad`; izin INTERNET dipindah ke manifest utama |
+| APK terbangun | ✅ | `app-debug.apk` (141 MB) dan `app-release.apk` (52 MB) di `build/app/outputs/flutter-apk/` |
