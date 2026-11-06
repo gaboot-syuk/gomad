@@ -160,3 +160,5 @@ dart run tool/pilot_smoke.dart
 | Tidak ada logika bisnis diduplikasi | ✅ | Semua perhitungan di Core Laravel; aplikasi hanya memformat tampilan |
 | Kerangka `android/` terpasang | ✅ | `flutter create . --platforms=android --org id.gomad`; izin INTERNET dipindah ke manifest utama |
 | APK terbangun | ✅ | `app-debug.apk` (141 MB) dan `app-release.apk` (52 MB) di `build/app/outputs/flutter-apk/` |
+| Bisa dicoba hidup tanpa perangkat | ✅ | `flutter build web --dart-define=GOMAD_API_BASE_URL=http://localhost:8200/api` lalu sajikan `build/web` (mis. `python3 -m http.server 8300`) |
+| Uji live tiga peran | ✅ | 2026-11-06: penjaga mencatat nota dari aplikasi (Rp 19.000, kembalian Rp 31.000), supir membuka tugas, pemilik melihat 5 nota |
